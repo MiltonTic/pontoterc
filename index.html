@@ -1,1 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Ponto</title>
+    <style>
+        /* ... seu CSS original ... */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background: #f0f2f5;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 20px;
+        }
+        
+        .campo {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border-left: 4px solid #1a73e8;
+        }
+        
+        .info p {
+            margin: 8px 0;
+            color: #555;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: #1669d6;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .mensagem {
+            padding: 12px;
+            border-radius: 5px;
+            margin: 15px 0;
+            text-align: center;
+            display: none;
+        }
+        
+        .sucesso {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .erro {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .carregando {
+            text-align: center;
+            color: #666;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📅 Registro de Ponto</h1>
+        
+        <div id="mensagem" class="mensagem"></div>
+        
+        <div class="campo">
+            <label for="nome">Seu Nome:</label>
+            <input type="text" id="nome" placeholder="Digite seu nome completo">
+        </div>
+        
+        <div class="info">
+            <p><strong>Data:</strong> <span id="data">--/--/----</span></p>
+            <p><strong>Hora:</strong> <span id="hora">--:--:--</span></p>
+            <p><strong>Localização:</strong> <span id="localizacao">📍 Obtendo...</span></p>
+        </div>
+        
+        <button id="registrarBtn">✅ Registrar Ponto</button>
+        <div id="status" class="carregando"></div>
+    </div>
 
+    <script>
+        // Configuração - SUBSTITUA PELA NOVA URL DE IMPLANTAÇÃO GERADA COMO "QUALQUER PESSOA"
+        const URL_SCRIPT = 'COLE A NOVA URL DE IMPLANTAÇÃO AQUI'; // Ex: https://script.google.com/macros/s/AKfycb.../exec
+        
+        // Elementos da página
+        const nomeInput = document.getElementById('nome');
+        const dataSpan = document.getElementById('data');
+        const horaSpan = document.getElementById('hora');
+        const localizacaoSpan = document.getElementById('localizacao');
+        const registrarBtn = document.getElementById('registrarBtn');
+        const mensagemDiv = document.getElementById('mensagem');
+        const statusDiv = document.getElementById('status');
+        
+        let localizacao = null;
+        
+        // Iniciar aplicativo
+        function iniciar() {
+            // Carregar nome salvo
+            const nomeSalvo = localStorage.getItem('nomeFuncionario');
+            if (nomeSalvo) {
+                nomeInput.value = nomeSalvo;
+            }
+            
+            // Atualizar relógio
+            atualizarRelogio();
+            setInterval(atualizarRelogio, 1000);
+            
+            // Obter localização
+            obterLocalizacao();
+            
+            // Configurar botão
+            registrarBtn.addEventListener('click', registrarPonto);
+            
+            statusDiv.textContent = 'Pronto para registrar ponto';
+        }
+        
+        function atualizarRelogio() {
+            const agora = new Date();
+            dataSpan.textContent = agora.toLocaleDateString('pt-BR');
+            horaSpan.textContent = agora.toLocaleTimeString('pt-BR');
+        }
+        
+        function obterLocalizacao() {
+            if (!navigator.geolocation) {
+                localizacaoSpan.textContent = '❌ Geolocalização não suportada';
+                return;
+            }
+            
+            localizacaoSpan.textContent = '📍 Obtendo localização...';
+            
+            navigator.geolocation.getCurrentPosition(
+                posicao => {
+                    localizacao = {
+                        lat: posicao.coords.latitude,
+                        lng: posicao.coords.longitude
+                    };
+                    localizacaoSpan.textContent = `📍 Lat: ${localizacao.lat.toFixed(4)}, Lng: ${localizacao.lng.toFixed(4)}`;
+                    statusDiv.textContent = 'Localização obtida - Pronto para registrar';
+                },
+                erro => {
+                    console.error('Erro de localização:', erro);
+                    localizacaoSpan.textContent = '❌ Localização não disponível';
+                    statusDiv.textContent = 'Aguardando localização...';
+                }
+            );
+        }
+        
+        function registrarPonto() {
+            const nome = nomeInput.value.trim();
+            
+            if (!nome) {
+                mostrarMensagem('Por favor, digite seu nome', 'erro');
+                nomeInput.focus();
+                return;
+            }
+            
+            if (!localizacao) {
+                mostrarMensagem('Aguardando localização. Aguarde alguns segundos.', 'erro');
+                return;
+            }
+            
+            // Salvar nome
+            localStorage.setItem('nomeFuncionario', nome);
+            
+            // Criar registro
+            const agora = new Date();
+            const registro = {
+                nome: nome,
+                data: agora.toLocaleDateString('pt-BR'),
+                hora: agora.toLocaleTimeString('pt-BR'),
+                latitude: localizacao.lat,
+                longitude: localizacao.lng,
+                timestamp: agora.getTime()
+            };
+            
+            // Enviar para planilha
+            enviarParaPlanilha(registro);
+        }
+        
+        function enviarParaPlanilha(registro) {
+            registrarBtn.disabled = true;
+            registrarBtn.textContent = '⏳ Enviando...';
+            statusDiv.textContent = 'Enviando dados para planilha...';
+            
+            fetch(URL_SCRIPT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                mode: 'cors', // Adicionar modo cors é importante para requisições externas
+                body: JSON.stringify({
+                    action: 'registrarPonto',
+                    data: registro
+                })
+            })
+            .then(resposta => resposta.json())
+            .then(dados => {
+                if (dados.success) {
+                    mostrarMensagem('✅ Ponto registrado com sucesso!', 'sucesso');
+                    statusDiv.textContent = `Último registro: ${new Date().toLocaleString()}`;
+                } else {
+                    throw new Error(dados.message);
+                }
+            })
+            .catch(erro => {
+                console.error('Erro:', erro);
+                mostrarMensagem(`❌ Erro: ${erro.message}`, 'erro');
+                statusDiv.textContent = 'Falha no envio - Tente novamente';
+            })
+            .finally(() => {
+                registrarBtn.disabled = false;
+                registrarBtn.textContent = '✅ Registrar Ponto';
+            });
+        }
+        
+        function mostrarMensagem(texto, tipo) {
+            mensagemDiv.textContent = texto;
+            mensagemDiv.className = `mensagem ${tipo}`;
+            mensagemDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                mensagemDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Iniciar
+        iniciar();
+    </script>
+</body>
+</html>
