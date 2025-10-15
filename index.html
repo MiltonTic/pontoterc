@@ -5,138 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Ponto</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-        
-        body {
-            background: #f0f2f5;
-            padding: 20px;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        h1 {
-            text-align: center;
-            color: #1a73e8;
-            margin-bottom: 20px;
-        }
-        
-        .campo {
-            margin-bottom: 15px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: bold;
-        }
-        
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        
-        .info {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 15px 0;
-            border-left: 4px solid #1a73e8;
-        }
-        
-        .info p {
-            margin: 8px 0;
-            color: #555;
-        }
-        
-        button {
-            width: 100%;
-            padding: 15px;
-            background: #1a73e8;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background 0.3s;
-        }
-        
-        button:hover {
-            background: #1669d6;
-        }
-        
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .mensagem {
-            padding: 12px;
-            border-radius: 5px;
-            margin: 15px 0;
-            text-align: center;
-            display: none;
-        }
-        
-        .sucesso {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .erro {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .carregando {
-            text-align: center;
-            color: #666;
-            margin: 10px 0;
-            font-size: 14px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .spinner {
-            border: 2px solid #f3f3f3;
-            border-radius: 50%;
-            border-top: 2px solid #3498db;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #f0f2f5; padding: 20px; min-height: 100vh; }
+        .container { max-width: 400px; margin: 0 auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #1a73e8; margin-bottom: 20px; }
+        .campo { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #333; font-weight: bold; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+        .info { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #1a73e8; }
+        .info p { margin: 8px 0; color: #555; }
+        button { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #1669d6; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .mensagem { padding: 12px; border-radius: 5px; margin: 15px 0; text-align: center; }
+        .sucesso { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .erro { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .carregando { text-align: center; color: #666; margin: 10px 0; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📅 Registro de Ponto</h1>
         
-        <div id="mensagem" class="mensagem"></div>
+        <div id="mensagem" class="mensagem" style="display:none;"></div>
         
         <div class="campo">
             <label for="nome">Seu Nome:</label>
@@ -149,37 +40,35 @@
             <p><strong>Localização:</strong> <span id="localizacao">📍 Obtendo localização...</span></p>
         </div>
         
-        <button id="registrarBtn">
-            ✅ Registrar Ponto
-        </button>
+        <button id="registrarBtn">✅ Registrar Ponto</button>
         <div id="status" class="carregando">Aguardando localização...</div>
     </div>
 
     <script>
-        // Configuração - URL do Google Apps Script
-        const URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbxPvESxX1P5PqNEnY_ThspI33_t5EAyhepyIb4gBsIgguxn2Y9aThoNs2T5SmL73Kyy/exec';
+        // URL do Google Apps Script - VERIFIQUE SE ESTÁ CORRETA!
+        const URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbwt4yp-K7qBoT2qwyl-_comToWrta9RQmeflMaWsAzosOnYYhfxrlEmyDoX9n8-F2mx/exec';
         
         // Elementos da página
-        const nomeInput = document.getElementById('nome');
-        const dataSpan = document.getElementById('data');
-        const horaSpan = document.getElementById('hora');
-        const localizacaoSpan = document.getElementById('localizacao');
-        const registrarBtn = document.getElementById('registrarBtn');
-        const mensagemDiv = document.getElementById('mensagem');
-        const statusDiv = document.getElementById('status');
+        const elementos = {
+            nome: document.getElementById('nome'),
+            data: document.getElementById('data'),
+            hora: document.getElementById('hora'),
+            localizacao: document.getElementById('localizacao'),
+            registrarBtn: document.getElementById('registrarBtn'),
+            mensagem: document.getElementById('mensagem'),
+            status: document.getElementById('status')
+        };
         
         let localizacao = null;
-        let nomeUsuario = '';
-        
+
         // Iniciar aplicativo
         function iniciar() {
-            console.log('Iniciando aplicativo...');
+            console.log('🔧 Iniciando aplicativo...');
             
             // Carregar nome salvo
             const nomeSalvo = localStorage.getItem('nomeFuncionario');
             if (nomeSalvo) {
-                nomeInput.value = nomeSalvo;
-                nomeUsuario = nomeSalvo;
+                elementos.nome.value = nomeSalvo;
             }
             
             // Atualizar relógio
@@ -189,104 +78,72 @@
             // Obter localização
             obterLocalizacao();
             
-            // Configurar botão
-            registrarBtn.addEventListener('click', registrarPonto);
+            // Configurar eventos
+            elementos.registrarBtn.addEventListener('click', registrarPonto);
+            elementos.nome.addEventListener('input', salvarNome);
             
-            // Configurar input do nome
-            nomeInput.addEventListener('input', function() {
-                nomeUsuario = this.value.trim();
-                localStorage.setItem('nomeFuncionario', nomeUsuario);
-            });
-            
-            statusDiv.textContent = 'Aguardando localização...';
-            
-            // Testar conexão com servidor
+            // Testar conexão
             testarConexao();
         }
         
         function testarConexao() {
-            console.log('Testando conexão com servidor...');
-            fetch(URL_SCRIPT + '?teste=' + Date.now())
+            console.log('🌐 Testando conexão com:', URL_SCRIPT);
+            fetch(URL_SCRIPT)
                 .then(response => response.text())
                 .then(text => {
-                    console.log('Conexão com servidor: OK');
-                    console.log('Resposta:', text);
+                    console.log('✅ Conexão OK - Resposta:', text.substring(0, 100));
+                    elementos.status.textContent = 'Conectado ao servidor - Pronto para registrar';
                 })
                 .catch(erro => {
-                    console.error('Erro de conexão:', erro);
-                    mostrarMensagem('⚠️ Sem conexão com o servidor. Os registros serão salvos localmente.', 'erro');
+                    console.error('❌ Erro de conexão:', erro);
+                    elementos.status.textContent = '⚠️ Sem conexão com servidor - Registros serão salvos localmente';
+                    mostrarMensagem('⚠️ Sem conexão com servidor. Os registros serão salvos localmente.', 'erro');
                 });
         }
         
         function atualizarRelogio() {
             const agora = new Date();
-            dataSpan.textContent = agora.toLocaleDateString('pt-BR');
-            horaSpan.textContent = agora.toLocaleTimeString('pt-BR');
+            elementos.data.textContent = agora.toLocaleDateString('pt-BR');
+            elementos.hora.textContent = agora.toLocaleTimeString('pt-BR');
         }
         
         function obterLocalizacao() {
             if (!navigator.geolocation) {
-                localizacaoSpan.textContent = '❌ Geolocalização não suportada';
-                statusDiv.textContent = 'Geolocalização não suportada pelo navegador';
+                elementos.localizacao.textContent = '❌ Geolocalização não suportada';
                 return;
             }
             
-            localizacaoSpan.textContent = '📍 Obtendo localização...';
-            statusDiv.textContent = 'Obtendo localização...';
-            
-            const opcoesGeolocalizacao = {
-                enableHighAccuracy: true,
-                timeout: 15000,
-                maximumAge: 60000
-            };
+            elementos.localizacao.textContent = '📍 Obtendo localização...';
             
             navigator.geolocation.getCurrentPosition(
-                posicao => {
+                sucesso => {
                     localizacao = {
-                        lat: posicao.coords.latitude,
-                        lng: posicao.coords.longitude,
-                        precisao: posicao.coords.accuracy
+                        lat: sucesso.coords.latitude,
+                        lng: sucesso.coords.longitude
                     };
-                    localizacaoSpan.innerHTML = `📍 <strong>Lat:</strong> ${localizacao.lat.toFixed(6)}, <strong>Lng:</strong> ${localizacao.lng.toFixed(6)}`;
-                    if (localizacao.precisao < 100) {
-                        statusDiv.textContent = '✅ Localização precisa obtida - Pronto para registrar';
-                    } else {
-                        statusDiv.textContent = '⚠️ Localização obtida (pouca precisão) - Pronto para registrar';
-                    }
-                    console.log('Localização obtida:', localizacao);
+                    elementos.localizacao.textContent = `📍 Lat: ${localizacao.lat.toFixed(6)}, Lng: ${localizacao.lng.toFixed(6)}`;
+                    elementos.status.textContent = '✅ Localização obtida - Pronto para registrar';
                 },
                 erro => {
-                    console.error('Erro de localização:', erro);
-                    let mensagemErro = '❌ Erro na localização: ';
-                    switch(erro.code) {
-                        case erro.PERMISSION_DENIED:
-                            mensagemErro += 'Permissão negada pelo usuário';
-                            break;
-                        case erro.POSITION_UNAVAILABLE:
-                            mensagemErro += 'Localização indisponível';
-                            break;
-                        case erro.TIMEOUT:
-                            mensagemErro += 'Tempo esgotado ao obter localização';
-                            break;
-                        default:
-                            mensagemErro += 'Erro desconhecido';
-                    }
-                    localizacaoSpan.textContent = mensagemErro;
-                    statusDiv.textContent = 'Erro na localização - Registro limitado';
-                    
-                    // Permitir registro mesmo sem localização
-                    localizacao = { lat: 0, lng: 0, erro: true };
+                    console.error('❌ Erro de localização:', erro);
+                    elementos.localizacao.textContent = '❌ Localização não disponível';
+                    elementos.status.textContent = '⚠️ Sem localização - Registro limitado';
+                    localizacao = { lat: 0, lng: 0 };
                 },
-                opcoesGeolocalizacao
+                { timeout: 10000 }
             );
         }
         
+        function salvarNome() {
+            localStorage.setItem('nomeFuncionario', elementos.nome.value.trim());
+        }
+        
         function registrarPonto() {
-            const nome = nomeInput.value.trim();
+            const nome = elementos.nome.value.trim();
             
             if (!nome) {
-                mostrarMensagem('❌ Por favor, digite seu nome completo', 'erro');
-                nomeInput.focus();
+                mostrarMensagem('❌ Por favor, digite seu nome', 'erro');
+                elementos.nome.focus();
                 return;
             }
             
@@ -295,9 +152,7 @@
                 return;
             }
             
-            // Salvar nome
-            localStorage.setItem('nomeFuncionario', nome);
-            nomeUsuario = nome;
+            salvarNome();
             
             // Criar registro
             const agora = new Date();
@@ -307,136 +162,79 @@
                 hora: agora.toLocaleTimeString('pt-BR'),
                 latitude: localizacao.lat,
                 longitude: localizacao.lng,
-                timestamp: agora.getTime(),
-                userAgent: navigator.userAgent
+                timestamp: agora.getTime()
             };
             
-            console.log('Registro a ser enviado:', registro);
-            
-            // Enviar para planilha
-            enviarParaPlanilha(registro);
+            console.log('📝 Registro criado:', registro);
+            enviarRegistro(registro);
         }
         
-        function enviarParaPlanilha(registro) {
-            registrarBtn.disabled = true;
-            registrarBtn.innerHTML = '<div class="spinner"></div> Enviando para servidor...';
-            statusDiv.textContent = 'Enviando registro...';
-
-            // Primeiro, tentar enviar para o Google Sheets
+        function enviarRegistro(registro) {
+            elementos.registrarBtn.disabled = true;
+            elementos.registrarBtn.textContent = '⏳ Enviando...';
+            elementos.status.textContent = 'Enviando registro...';
+            
+            // Tentar enviar para Google Sheets
             fetch(URL_SCRIPT, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'registrarPonto',
-                    data: registro
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'registrarPonto', data: registro })
             })
             .then(response => {
-                console.log('Status da resposta:', response.status);
-                console.log('URL da resposta:', response.url);
-                
-                // O Google Apps Script pode redirecionar, então seguimos para a URL final
-                if (response.redirected) {
-                    return fetch(response.url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            action: 'registrarPonto',
-                            data: registro
-                        })
-                    });
-                }
-                return response;
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP: ${response.status} ${response.statusText}`);
-                }
+                console.log('📨 Resposta recebida - Status:', response.status);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 return response.json();
             })
             .then(data => {
-                console.log('Resposta do servidor:', data);
+                console.log('✅ Resposta do servidor:', data);
                 if (data.success) {
-                    mostrarMensagem('✅ Ponto registrado com sucesso no Google Sheets!', 'sucesso');
-                    statusDiv.textContent = 'Registro salvo com sucesso';
-                    console.log('Registro salvo no Google Sheets:', registro);
+                    mostrarMensagem('✅ Ponto registrado com sucesso!', 'sucesso');
+                    elementos.status.textContent = 'Registro salvo no Google Sheets';
                 } else {
-                    throw new Error(data.message || 'Erro desconhecido do servidor');
+                    throw new Error(data.message || 'Erro no servidor');
                 }
             })
             .catch(erro => {
-                console.error('Erro ao enviar para Google Sheets:', erro);
-                
-                // Salvar localmente em caso de falha
-                salvarNoHistoricoLocal(registro);
-                mostrarMensagem('📱 Registro salvo localmente (sem conexão com servidor)', 'erro');
-                statusDiv.textContent = 'Registro salvo localmente (offline)';
+                console.error('❌ Erro ao enviar:', erro);
+                // Salvar localmente
+                salvarLocalmente(registro);
+                mostrarMensagem('📱 Registro salvo localmente (sem conexão)', 'erro');
+                elementos.status.textContent = 'Registro salvo localmente';
             })
             .finally(() => {
-                registrarBtn.disabled = false;
-                registrarBtn.innerHTML = '✅ Registrar Ponto';
+                elementos.registrarBtn.disabled = false;
+                elementos.registrarBtn.textContent = '✅ Registrar Ponto';
                 
-                // Restaurar status após 3 segundos
                 setTimeout(() => {
-                    if (localizacao && !localizacao.erro) {
-                        statusDiv.textContent = 'Pronto para registrar';
+                    if (localizacao.lat !== 0) {
+                        elementos.status.textContent = 'Pronto para registrar';
                     }
                 }, 3000);
             });
         }
         
-        function salvarNoHistoricoLocal(registro) {
-            try {
-                let historico = JSON.parse(localStorage.getItem('historicoPontos') || '[]');
-                const registroLocal = {
-                    ...registro,
-                    pendente: true,
-                    dataHoraSalvamento: new Date().toISOString(),
-                    id: Date.now() + Math.random()
-                };
-                historico.unshift(registroLocal); // Adiciona no início
-                localStorage.setItem('historicoPontos', JSON.stringify(historico));
-                console.log('Registro salvo localmente:', registroLocal);
-                
-                // Tentar sincronizar registros pendentes
-                sincronizarRegistrosPendentes();
-            } catch (e) {
-                console.error('Erro ao salvar localmente:', e);
-            }
-        }
-        
-        function sincronizarRegistrosPendentes() {
+        function salvarLocalmente(registro) {
             try {
                 const historico = JSON.parse(localStorage.getItem('historicoPontos') || '[]');
-                const pendentes = historico.filter(reg => reg.pendente);
-                
-                if (pendentes.length > 0) {
-                    console.log(`Tentando sincronizar ${pendentes.length} registros pendentes...`);
-                    // Aqui você pode implementar a lógica para tentar enviar os pendentes
-                }
+                historico.unshift({ ...registro, dataHora: new Date().toISOString() });
+                localStorage.setItem('historicoPontos', JSON.stringify(historico));
+                console.log('💾 Registro salvo localmente');
             } catch (e) {
-                console.error('Erro ao sincronizar pendentes:', e);
+                console.error('❌ Erro ao salvar localmente:', e);
             }
         }
         
         function mostrarMensagem(texto, tipo) {
-            mensagemDiv.textContent = texto;
-            mensagemDiv.className = `mensagem ${tipo}`;
-            mensagemDiv.style.display = 'block';
-            
-            // Rolagem suave para a mensagem
-            mensagemDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            elementos.mensagem.textContent = texto;
+            elementos.mensagem.className = `mensagem ${tipo}`;
+            elementos.mensagem.style.display = 'block';
             
             setTimeout(() => {
-                mensagemDiv.style.display = 'none';
+                elementos.mensagem.style.display = 'none';
             }, 5000);
         }
         
-        // Iniciar quando o DOM estiver carregado
+        // Iniciar quando a página carregar
         document.addEventListener('DOMContentLoaded', iniciar);
     </script>
 </body>
