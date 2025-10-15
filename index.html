@@ -268,45 +268,46 @@
             enviarParaPlanilha(registro);
         }
         
-        function enviarParaPlanilha(registro) {
-            registrarBtn.disabled = true;
-            registrarBtn.innerHTML = '<div class="spinner"></div> Enviando...';
+       function enviarParaPlanilha(registro) {
+    registrarBtn.disabled = true;
+    registrarBtn.innerHTML = '<div class="spinner"></div> Enviando...';
 
-            fetch(URL_SCRIPT, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'registrarPonto',
-                    data: registro
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Erro na resposta do servidor: ' + response.status);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    mostrarMensagem('✅ Ponto registrado com sucesso no Google Sheets!', 'sucesso');
-                    console.log('Registro salvo:', registro);
-                } else {
-                    throw new Error(data.message || 'Erro desconhecido do servidor');
-                }
-            })
-            .catch(erro => {
-                console.error('Erro ao enviar para Google Sheets:', erro);
-                mostrarMensagem('❌ Erro ao registrar ponto: ' + erro.message, 'erro');
-                // Salvar localmente em caso de falha
-                salvarNoHistoricoLocal(registro);
-            })
-            .finally(() => {
-                registrarBtn.disabled = false;
-                registrarBtn.textContent = '✅ Registrar Ponto';
-            });
+    fetch(URL_SCRIPT, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'registrarPonto',
+            data: registro
+        })
+    })
+    .then(response => {
+        console.log('Resposta bruta:', response);
+        if (!response.ok) {
+            throw new Error('Erro na resposta do servidor: ' + response.status);
         }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Dados recebidos:', data);
+        if (data.success) {
+            mostrarMensagem('✅ Ponto registrado com sucesso no Google Sheets!', 'sucesso');
+        } else {
+            throw new Error(data.message || 'Erro desconhecido');
+        }
+    })
+    .catch(erro => {
+        console.error('Erro ao enviar para Google Sheets:', erro);
+        mostrarMensagem('❌ Erro ao registrar ponto: ' + erro.message, 'erro');
+        // Salvar localmente em caso de falha
+        salvarNoHistoricoLocal(registro);
+    })
+    .finally(() => {
+        registrarBtn.disabled = false;
+        registrarBtn.textContent = '✅ Registrar Ponto';
+    });
+}
         
         function salvarNoHistoricoLocal(registro) {
             try {
