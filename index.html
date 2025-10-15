@@ -234,42 +234,66 @@
             enviarParaPlanilha(registro);
         }
         
-        function enviarParaPlanilha(registro) {
-            registrarBtn.disabled = true;
-            registrarBtn.textContent = '⏳ Enviando...';
-            statusDiv.textContent = 'Enviando dados para planilha...';
-            
-            fetch(URL_SCRIPT, {
+function enviarParaGoogleSheets(registro) {
+    btnRegistrar.disabled = true;
+    btnRegistrar.innerHTML = '<div class="spinner" style="width: 20px; height: 20px; margin: 0 auto;"></div> Enviando...';
+
+    // A URL do Google Apps Script
+    const url = scriptUrl; // Essa variável deve ter a URL salva
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'registrarPonto',
+            data: registro
+        })
+    })
+    .then(response => {
+        // O Google Apps Script retorna redirecionamentos, então precisamos seguir até a resposta final
+        if (response.redirected) {
+            // Se houve redirecionamento, faz uma nova requisição para a URL final
+            return fetch(response.url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                mode: 'cors', // Adicionar modo cors é importante para requisições externas
                 body: JSON.stringify({
                     action: 'registrarPonto',
                     data: registro
                 })
-            })
-            .then(resposta => resposta.json())
-            .then(dados => {
-                if (dados.success) {
-                    mostrarMensagem('✅ Ponto registrado com sucesso!', 'sucesso');
-                    statusDiv.textContent = `Último registro: ${new Date().toLocaleString()}`;
-                } else {
-                    throw new Error(dados.message);
-                }
-            })
-            .catch(erro => {
-                console.error('Erro:', erro);
-                mostrarMensagem(`❌ Erro: ${erro.message}`, 'erro');
-                statusDiv.textContent = 'Falha no envio - Tente novamente';
-            })
-            .finally(() => {
-                registrarBtn.disabled = false;
-                registrarBtn.textContent = '✅ Registrar Ponto';
             });
         }
-        
+        return response;
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erro na resposta do servidor');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            mostrarAlerta('Ponto registrado com sucesso no Google Sheets!', 'success');
+            // Atualizar histórico local
+            salvarNoHistoricoLocal(registro);
+        } else {
+            throw new Error(data.message || 'Erro desconhecido');
+        }
+    })
+    .catch(erro => {
+        console.error('Erro ao enviar para Google Sheets:', erro);
+        mostrarAlerta('Erro ao registrar ponto: ' + erro.message, 'error');
+        // Salvar localmente em caso de falha
+        salvarNoHistoricoLocal(registro);
+    })
+    .finally(() => {
+        btnRegistrar.disabled = false;
+        btnRegistrar.textContent = 'Registrar Ponto';
+    });
+}
         function mostrarMensagem(texto, tipo) {
             mensagemDiv.textContent = texto;
             mensagemDiv.className = `mensagem ${tipo}`;
