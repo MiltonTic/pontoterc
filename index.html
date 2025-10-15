@@ -75,6 +75,7 @@
             font-size: 16px;
             cursor: pointer;
             margin-top: 10px;
+            transition: background 0.3s;
         }
         
         button:hover {
@@ -110,6 +111,7 @@
             text-align: center;
             color: #666;
             margin: 10px 0;
+            font-size: 14px;
         }
 
         @keyframes spin {
@@ -124,7 +126,9 @@
             width: 20px;
             height: 20px;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
         }
     </style>
 </head>
@@ -142,16 +146,18 @@
         <div class="info">
             <p><strong>Data:</strong> <span id="data">--/--/----</span></p>
             <p><strong>Hora:</strong> <span id="hora">--:--:--</span></p>
-            <p><strong>Localização:</strong> <span id="localizacao">📍 Obtendo...</span></p>
+            <p><strong>Localização:</strong> <span id="localizacao">📍 Obtendo localização...</span></p>
         </div>
         
-        <button id="registrarBtn">✅ Registrar Ponto</button>
-        <div id="status" class="carregando"></div>
+        <button id="registrarBtn">
+            ✅ Registrar Ponto
+        </button>
+        <div id="status" class="carregando">Aguardando localização...</div>
     </div>
 
     <script>
         // Configuração - URL do Google Apps Script
-        const URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbwvqqtxL3zxPnOq39eBzLsOap8mx9DgvqlIzap0njSgb1s_FNmkK4Kd4YPPtgSVOpOJ/exec';
+        const URL_SCRIPT = 'https://script.google.com/macros/s/AKfycbwF9np9plTSeqrebSND4_yuMi6oeRhMZzFlG32S8TBO22hR0JfgOkBQ6kgdZr60k1Oa/exec';
         
         // Elementos da página
         const nomeInput = document.getElementById('nome');
@@ -163,13 +169,17 @@
         const statusDiv = document.getElementById('status');
         
         let localizacao = null;
+        let nomeUsuario = '';
         
         // Iniciar aplicativo
         function iniciar() {
+            console.log('Iniciando aplicativo...');
+            
             // Carregar nome salvo
             const nomeSalvo = localStorage.getItem('nomeFuncionario');
             if (nomeSalvo) {
                 nomeInput.value = nomeSalvo;
+                nomeUsuario = nomeSalvo;
             }
             
             // Atualizar relógio
@@ -182,17 +192,25 @@
             // Configurar botão
             registrarBtn.addEventListener('click', registrarPonto);
             
-            statusDiv.textContent = 'Pronto para registrar ponto';
+            // Configurar input do nome
+            nomeInput.addEventListener('input', function() {
+                nomeUsuario = this.value.trim();
+                localStorage.setItem('nomeFuncionario', nomeUsuario);
+            });
+            
+            statusDiv.textContent = 'Aguardando localização...';
             
             // Testar conexão com servidor
             testarConexao();
         }
         
         function testarConexao() {
-            fetch(URL_SCRIPT)
+            console.log('Testando conexão com servidor...');
+            fetch(URL_SCRIPT + '?teste=' + Date.now())
                 .then(response => response.text())
                 .then(text => {
                     console.log('Conexão com servidor: OK');
+                    console.log('Resposta:', text);
                 })
                 .catch(erro => {
                     console.error('Erro de conexão:', erro);
@@ -209,30 +227,57 @@
         function obterLocalizacao() {
             if (!navigator.geolocation) {
                 localizacaoSpan.textContent = '❌ Geolocalização não suportada';
+                statusDiv.textContent = 'Geolocalização não suportada pelo navegador';
                 return;
             }
             
             localizacaoSpan.textContent = '📍 Obtendo localização...';
+            statusDiv.textContent = 'Obtendo localização...';
+            
+            const opcoesGeolocalizacao = {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 60000
+            };
             
             navigator.geolocation.getCurrentPosition(
                 posicao => {
                     localizacao = {
                         lat: posicao.coords.latitude,
-                        lng: posicao.coords.longitude
+                        lng: posicao.coords.longitude,
+                        precisao: posicao.coords.accuracy
                     };
-                    localizacaoSpan.textContent = `📍 Lat: ${localizacao.lat.toFixed(4)}, Lng: ${localizacao.lng.toFixed(4)}`;
-                    statusDiv.textContent = 'Localização obtida - Pronto para registrar';
+                    localizacaoSpan.innerHTML = `📍 <strong>Lat:</strong> ${localizacao.lat.toFixed(6)}, <strong>Lng:</strong> ${localizacao.lng.toFixed(6)}`;
+                    if (localizacao.precisao < 100) {
+                        statusDiv.textContent = '✅ Localização precisa obtida - Pronto para registrar';
+                    } else {
+                        statusDiv.textContent = '⚠️ Localização obtida (pouca precisão) - Pronto para registrar';
+                    }
+                    console.log('Localização obtida:', localizacao);
                 },
                 erro => {
                     console.error('Erro de localização:', erro);
-                    localizacaoSpan.textContent = '❌ Localização não disponível';
-                    statusDiv.textContent = 'Aguardando localização...';
+                    let mensagemErro = '❌ Erro na localização: ';
+                    switch(erro.code) {
+                        case erro.PERMISSION_DENIED:
+                            mensagemErro += 'Permissão negada pelo usuário';
+                            break;
+                        case erro.POSITION_UNAVAILABLE:
+                            mensagemErro += 'Localização indisponível';
+                            break;
+                        case erro.TIMEOUT:
+                            mensagemErro += 'Tempo esgotado ao obter localização';
+                            break;
+                        default:
+                            mensagemErro += 'Erro desconhecido';
+                    }
+                    localizacaoSpan.textContent = mensagemErro;
+                    statusDiv.textContent = 'Erro na localização - Registro limitado';
+                    
+                    // Permitir registro mesmo sem localização
+                    localizacao = { lat: 0, lng: 0, erro: true };
                 },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 60000
-                }
+                opcoesGeolocalizacao
             );
         }
         
@@ -240,18 +285,19 @@
             const nome = nomeInput.value.trim();
             
             if (!nome) {
-                mostrarMensagem('Por favor, digite seu nome', 'erro');
+                mostrarMensagem('❌ Por favor, digite seu nome completo', 'erro');
                 nomeInput.focus();
                 return;
             }
             
             if (!localizacao) {
-                mostrarMensagem('Aguardando localização. Aguarde alguns segundos.', 'erro');
+                mostrarMensagem('⏳ Aguardando localização...', 'erro');
                 return;
             }
             
             // Salvar nome
             localStorage.setItem('nomeFuncionario', nome);
+            nomeUsuario = nome;
             
             // Criar registro
             const agora = new Date();
@@ -261,67 +307,119 @@
                 hora: agora.toLocaleTimeString('pt-BR'),
                 latitude: localizacao.lat,
                 longitude: localizacao.lng,
-                timestamp: agora.getTime()
+                timestamp: agora.getTime(),
+                userAgent: navigator.userAgent
             };
+            
+            console.log('Registro a ser enviado:', registro);
             
             // Enviar para planilha
             enviarParaPlanilha(registro);
         }
         
-       function enviarParaPlanilha(registro) {
-    registrarBtn.disabled = true;
-    registrarBtn.innerHTML = '<div class="spinner"></div> Enviando...';
+        function enviarParaPlanilha(registro) {
+            registrarBtn.disabled = true;
+            registrarBtn.innerHTML = '<div class="spinner"></div> Enviando para servidor...';
+            statusDiv.textContent = 'Enviando registro...';
 
-    fetch(URL_SCRIPT, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            action: 'registrarPonto',
-            data: registro
-        })
-    })
-    .then(response => {
-        console.log('Resposta bruta:', response);
-        if (!response.ok) {
-            throw new Error('Erro na resposta do servidor: ' + response.status);
+            // Primeiro, tentar enviar para o Google Sheets
+            fetch(URL_SCRIPT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'registrarPonto',
+                    data: registro
+                })
+            })
+            .then(response => {
+                console.log('Status da resposta:', response.status);
+                console.log('URL da resposta:', response.url);
+                
+                // O Google Apps Script pode redirecionar, então seguimos para a URL final
+                if (response.redirected) {
+                    return fetch(response.url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'registrarPonto',
+                            data: registro
+                        })
+                    });
+                }
+                return response;
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status} ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Resposta do servidor:', data);
+                if (data.success) {
+                    mostrarMensagem('✅ Ponto registrado com sucesso no Google Sheets!', 'sucesso');
+                    statusDiv.textContent = 'Registro salvo com sucesso';
+                    console.log('Registro salvo no Google Sheets:', registro);
+                } else {
+                    throw new Error(data.message || 'Erro desconhecido do servidor');
+                }
+            })
+            .catch(erro => {
+                console.error('Erro ao enviar para Google Sheets:', erro);
+                
+                // Salvar localmente em caso de falha
+                salvarNoHistoricoLocal(registro);
+                mostrarMensagem('📱 Registro salvo localmente (sem conexão com servidor)', 'erro');
+                statusDiv.textContent = 'Registro salvo localmente (offline)';
+            })
+            .finally(() => {
+                registrarBtn.disabled = false;
+                registrarBtn.innerHTML = '✅ Registrar Ponto';
+                
+                // Restaurar status após 3 segundos
+                setTimeout(() => {
+                    if (localizacao && !localizacao.erro) {
+                        statusDiv.textContent = 'Pronto para registrar';
+                    }
+                }, 3000);
+            });
         }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Dados recebidos:', data);
-        if (data.success) {
-            mostrarMensagem('✅ Ponto registrado com sucesso no Google Sheets!', 'sucesso');
-        } else {
-            throw new Error(data.message || 'Erro desconhecido');
-        }
-    })
-    .catch(erro => {
-        console.error('Erro ao enviar para Google Sheets:', erro);
-        mostrarMensagem('❌ Erro ao registrar ponto: ' + erro.message, 'erro');
-        // Salvar localmente em caso de falha
-        salvarNoHistoricoLocal(registro);
-    })
-    .finally(() => {
-        registrarBtn.disabled = false;
-        registrarBtn.textContent = '✅ Registrar Ponto';
-    });
-}
         
         function salvarNoHistoricoLocal(registro) {
             try {
                 let historico = JSON.parse(localStorage.getItem('historicoPontos') || '[]');
-                historico.push({
+                const registroLocal = {
                     ...registro,
                     pendente: true,
-                    dataHora: new Date().toISOString()
-                });
+                    dataHoraSalvamento: new Date().toISOString(),
+                    id: Date.now() + Math.random()
+                };
+                historico.unshift(registroLocal); // Adiciona no início
                 localStorage.setItem('historicoPontos', JSON.stringify(historico));
-                console.log('Registro salvo localmente:', registro);
-                mostrarMensagem('📱 Registro salvo localmente (sem internet)', 'erro');
+                console.log('Registro salvo localmente:', registroLocal);
+                
+                // Tentar sincronizar registros pendentes
+                sincronizarRegistrosPendentes();
             } catch (e) {
                 console.error('Erro ao salvar localmente:', e);
+            }
+        }
+        
+        function sincronizarRegistrosPendentes() {
+            try {
+                const historico = JSON.parse(localStorage.getItem('historicoPontos') || '[]');
+                const pendentes = historico.filter(reg => reg.pendente);
+                
+                if (pendentes.length > 0) {
+                    console.log(`Tentando sincronizar ${pendentes.length} registros pendentes...`);
+                    // Aqui você pode implementar a lógica para tentar enviar os pendentes
+                }
+            } catch (e) {
+                console.error('Erro ao sincronizar pendentes:', e);
             }
         }
         
@@ -330,13 +428,16 @@
             mensagemDiv.className = `mensagem ${tipo}`;
             mensagemDiv.style.display = 'block';
             
+            // Rolagem suave para a mensagem
+            mensagemDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
             setTimeout(() => {
                 mensagemDiv.style.display = 'none';
             }, 5000);
         }
         
-        // Iniciar
-        iniciar();
+        // Iniciar quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', iniciar);
     </script>
 </body>
 </html>
